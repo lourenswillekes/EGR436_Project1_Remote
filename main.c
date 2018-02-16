@@ -13,33 +13,36 @@
 #include <stdlib.h>
 
 #include "clockConfig.h"
+#include "environment_sensor.h"
 
+
+struct bme280_dev dev;
+struct bme280_data compensated_data;
 
 
 int main(void)
 {
+    int res;
+
     /* Halting the Watchdog  */
     MAP_WDT_A_holdTimer();
 
     clockStartUp();
 
+    BME280_Init(&dev);
+
     /* Enabling the FPU for floating point operation */
     MAP_FPU_enableModule();
     MAP_FPU_enableLazyStacking();
 
-    /* Configuring SysTick */
-    MAP_SysTick_enableModule();
-    MAP_SysTick_setPeriod(12000000);
-
-    MAP_SysTick_enableInterrupt();
     MAP_Interrupt_enableMaster();
 
     while(1)
     {
-
+        // wait for the sensor to complete a measurement
+        timer32_Wait_ms(50);
+        // and get the data
+        res = BME280_Read(&dev, &compensated_data);
     }
 }
-void SysTick_Handler(void)
-{
 
-}
