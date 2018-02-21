@@ -28,6 +28,6 @@ void RTC_Config(void);
 
 void RTC_Initial_Set(void);
 
-
+void getRTCtime(char *data);
 
 #endif /* RTC_MODULE_H_ */

@@ -47,14 +47,38 @@ int main(void)
     MAP_FPU_enableModule();
     MAP_FPU_enableLazyStacking();
 
+    MAP_Interrupt_enableInterrupt(INT_RTC_C);
+
     MAP_Interrupt_enableMaster();
 
+    char data[5];
+
+    printf("\nTime Set\n\r");
+    char out[20];
+    RTC_C_Calendar time = MAP_RTC_C_getCalendarTime();
+    sprintf(out,"%02.0d:%02.0d:%02.0d    %02.0d/%02.0d/%02.0d",
+                time.hours,
+                time.minutes,
+                time.seconds,
+                time.month,
+                time.dayOfmonth,
+                time.year);
+    printf("Current Time: %s\n\r",out);
     while(1)
     {
         // wait for the sensor to complete a measurement
         timer32_Wait_ms(50);
         // and get the data
         res = BME280_Read(&dev, &compensated_data);
+
+        if(second_count==30){
+            second_count=0;
+            getRTCtime(data);
+            printf("\n\rTime: %s",data);
+            printf("\n\r\tTemp: %d",compensated_data.temperature);
+            printf("\n\r\tHumidity: %d",compensated_data.humidity);
+            printf("\n\r\tPressure: %d",compensated_data.pressure);
+        }
     }
 }
 

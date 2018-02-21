@@ -196,3 +196,9 @@ void RTC_Initial_Set(void){
     MAP_RTC_C_startClock();
     return;
 }
+
+void getRTCtime(char *data){
+    newtime = MAP_RTC_C_getCalendarTime();
+    sprintf(data,"%02.0d:%02.0d",newtime.hours,newtime.minutes);
+    return;
+}

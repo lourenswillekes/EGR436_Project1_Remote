@@ -91,7 +91,8 @@ extern void T32_INT1_IRQHandler (void) __attribute__((weak,alias("Default_Handle
 extern void T32_INT2_IRQHandler (void) __attribute__((weak,alias("Default_Handler")));
 extern void T32_INTC_IRQHandler (void) __attribute__((weak,alias("Default_Handler")));
 extern void AES256_IRQHandler   (void) __attribute__((weak,alias("Default_Handler")));
-extern void RTC_C_IRQHandler    (void) __attribute__((weak,alias("Default_Handler")));
+//extern void RTC_C_IRQHandler    (void) __attribute__((weak,alias("Default_Handler")));
+extern void RTC_C_IRQHandler(void);
 extern void DMA_ERR_IRQHandler  (void) __attribute__((weak,alias("Default_Handler")));
 extern void DMA_INT3_IRQHandler (void) __attribute__((weak,alias("Default_Handler")));
 extern void DMA_INT2_IRQHandler (void) __attribute__((weak,alias("Default_Handler")));
