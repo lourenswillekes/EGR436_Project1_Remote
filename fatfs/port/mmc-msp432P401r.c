@@ -231,7 +231,7 @@ BOOL rcvr_datablock (
     do {                            /* Wait for data packet in timeout of 100ms */
         token = rcvr_spi();
     } while ((token == 0xFF) && Timer1);
-    if(token != 0xFE) return FALSE;    /* If not valid data token, retutn with error */
+    if(token != 0xFE) return FAL;    /* If not valid data token, retutn with error */
 
     do {                            /* Receive the data block into buffer */
         rcvr_spi_m(buff++);
@@ -239,7 +239,7 @@ BOOL rcvr_datablock (
     } while (btr -= 2);
     rcvr_spi();                        /* Discard CRC */
     rcvr_spi();
-    return TRUE;                    /* Return with success */
+    return TRU;                    /* Return with success */
 }
 
 
@@ -257,7 +257,7 @@ BOOL xmit_datablock (
 {
     BYTE resp, wc;
 
-    if (wait_ready() != 0xFF) return FALSE;
+    if (wait_ready() != 0xFF) return FAL;
 
     xmit_spi(token);                    /* Xmit data token */
     if (token != 0xFD) {    /* Is data token */
@@ -270,9 +270,9 @@ BOOL xmit_datablock (
         xmit_spi(0xFF);
         resp = rcvr_spi();                /* Reveive data response */
         if ((resp & 0x1F) != 0x05)        /* If not accepted, return with error */
-            return FALSE;
+            return FAL;
     }
-    return TRUE;
+    return TRU;
 }
 #endif /* _READONLY */
 

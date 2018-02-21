@@ -27,6 +27,7 @@ typedef struct time_step{
 void RTC_Config(void);
 
 void RTC_Initial_Set(void);
+void RTC_Initial_Set_Hardcoded(void);
 
 void getRTCtime(char *data);
 

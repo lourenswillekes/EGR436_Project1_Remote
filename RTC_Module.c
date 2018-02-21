@@ -73,10 +73,10 @@ void RTC_Config(void){
             RTC_C_CLOCK_READ_READY_INTERRUPT | RTC_C_TIME_EVENT_INTERRUPT);
 
     //initalize baseline measurement
-    TI_CAPT_Init_Baseline(&my_keys);
+    //TI_CAPT_Init_Baseline(&my_keys);
 
     //update baseline measurement (average 30 measurements)
-    TI_CAPT_Update_Baseline(&my_keys, 30);
+    //TI_CAPT_Update_Baseline(&my_keys, 30);
 }
 
 void RTC_Initial_Set(void){
@@ -195,6 +195,13 @@ void RTC_Initial_Set(void){
     /* Start RTC Clock */
     MAP_RTC_C_startClock();
     return;
+}
+
+
+void RTC_Initial_Set_Hardcoded(void)
+{
+    MAP_RTC_C_initCalendar(&currentTime, RTC_C_FORMAT_BINARY);
+    MAP_RTC_C_startClock();
 }
 
 void getRTCtime(char *data){
