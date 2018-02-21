@@ -79,6 +79,9 @@
 							<tool id="com.ti.ccstudio.buildDefinitions.MSP432_16.9.hex.1454056886" name="ARM Hex Utility" superClass="com.ti.ccstudio.buildDefinitions.MSP432_16.9.hex"/>
 						</toolChain>
 					</folderInfo>
+					<sourceEntries>
+						<entry excluding="fatfs/src/option/syscall.c|fatfs/src/option/ccsbcs.c|fatfs/src/option/cc950.c|fatfs/src/option/cc949.c|fatfs/src/option/cc936.c|fatfs/src/option/cc932.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+					</sourceEntries>
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
