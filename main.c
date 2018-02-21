@@ -26,27 +26,24 @@
 volatile int second_count;
 volatile int reset_time = 0;
 
-/* currently out of main so that viewing this during debgging is easy */
+/* currently out of main so that viewing this during debugging is easy */
 // data used by the environmental sensor
 struct bme280_dev dev;
 struct bme280_data compensated_data;
+// data used to write to the sd card
+RTC_C_Calendar current_time;
+char data_line[45];
+
 
 
 int main(void)
 {
     int res;
-    char data[5];
-
-
-
-
 
     // data used by the fatfs
-    char g_pcTmpBuf[80];
     FATFS g_sFatFs;
     FIL g_sFileObject;
     FRESULT iFResult;
-    UINT readBytes = 0;
     UINT writeBytes = 0;
 
 
@@ -77,10 +74,18 @@ int main(void)
     MAP_SysTick_setPeriod(30000);
     MAP_SysTick_enableModule();
 
+
     // initialize the fatfs driver
     spi_Open();
     // mount the file system using logical disk 0
     iFResult = f_mount(0, &g_sFatFs);
+    // open a new log file in the fileobject
+    iFResult = f_open(&g_sFileObject, "log.txt", FA_WRITE | FA_CREATE_ALWAYS);
+    // write a the header line to the log file
+    iFResult = f_write(&g_sFileObject, "Year Mo Da Ho Mi Tempe Humid Pressure Light\r\n", 45, &writeBytes);
+    // close the file again
+    iFResult = f_close(&g_sFileObject);
+
 
     MAP_SysTick_enableInterrupt();
     MAP_Interrupt_enableInterrupt(INT_RTC_C);
@@ -89,62 +94,35 @@ int main(void)
 
 
 
-
-    // Print message to user.
-    printf("\n\nSD Card Test Program\n\r");
-    // Mount the file system, using logical disk 0.
-    iFResult = f_mount(0, &g_sFatFs);
-    // Open a new file in the fileobject
-    iFResult = f_open(&g_sFileObject, "log.txt", FA_WRITE | FA_CREATE_ALWAYS);
-    // write a 16 byte string to the sd card
-    iFResult = f_write(&g_sFileObject, "This is a test\r\n", 16, &writeBytes);
-    // print the number of characters written and close the file
-    printf("%d characters written\n\r", writeBytes);
-    iFResult = f_close(&g_sFileObject);
-    // open the file
-    iFResult = f_open(&g_sFileObject, "newFile1", FA_READ);
-    // read a string from the file on the sd card
-    iFResult = f_read(&g_sFileObject, g_pcTmpBuf, sizeof(g_pcTmpBuf) - 1, &readBytes);
-    // print the number of characters read and the line read
-    printf("%d characters read\n\r",readBytes);
-    printf("%s\n\r", g_pcTmpBuf);
-    // close the file again
-    iFResult = f_close(&g_sFileObject);
-
-
-
-
-
-
-    printf("\nTime Set\n\r");
-    char out[20];
-    RTC_C_Calendar time = MAP_RTC_C_getCalendarTime();
-    sprintf(out,"%02.0d:%02.0d:%02.0d    %02.0d/%02.0d/%02.0d",
-                time.hours,
-                time.minutes,
-                time.seconds,
-                time.month,
-                time.dayOfmonth,
-                time.year);
-    printf("Current Time: %s\n\r",out);
-    getRTCtime(data);
-    printf("\n\rTime: %s",data);
-
     while(1)
     {
 
-        if(second_count >= 30){
-        //if(second_count >= 500){
+        if(second_count >= 5){
+
             second_count = 0;
-            getRTCtime(data);
+
+            current_time = MAP_RTC_C_getCalendarTime();
             res = BME280_Read(&dev, &compensated_data);
-            printf("\n\rTime: %s",data);
-            printf("\n\r\tTemp: %d",compensated_data.temperature);
-            printf("\n\r\tHumidity: %d",compensated_data.humidity);
-            printf("\n\r\tPressure: %d",compensated_data.pressure);
+            sprintf(data_line, "%04d,%02d,%02d,%02d,%02d,%05d,%05d,%08d,%05d\r\n",
+                current_time.year, current_time.month, current_time.dayOfmonth,
+                current_time.hours, current_time.minutes, compensated_data.temperature,
+                compensated_data.humidity, compensated_data.pressure, 16383);
+            printf(data_line);
+
+            // Open a new file in the fileobject
+            iFResult = f_open(&g_sFileObject, "log.txt", FA_WRITE);
+            // move pointer to the end of the file
+            iFResult = f_lseek(&g_sFileObject, g_sFileObject.fsize);
+            // write a data string to the sd card
+            iFResult = f_write(&g_sFileObject, data_line, 45, &writeBytes);
+            // close the file
+            iFResult = f_close(&g_sFileObject);
+
         }
+
     }
 }
+
 
 /* RTC ISR */
 void RTC_C_IRQHandler(void)
