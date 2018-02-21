@@ -1,8 +1,9 @@
 /*
- * ADC.h
+ * main.c
+ * Entry point for the remote station
  *
  *  Created on: Feb 2018
- *      Author: lourw
+ *      Author: lourw and joe
  */
 
 #include "driverlib.h"
@@ -13,12 +14,11 @@
 #include <stdlib.h>
 
 #include "clockConfig.h"
-#include "environment_sensor.h"
-
+#include "environment_sensor.h"     // eusci_b1
 #include "RTC_Module.h"
+#include "UART_Init.h"              // eusci_a0
 
-//UART setup up for 9600 BAUD if MCLK is 48MHz
-#include "UART_Init.h"
+
 
 
 struct bme280_dev dev;
@@ -28,29 +28,38 @@ int second_count;
 int reset_time = 0;
 
 
+
+
 int main(void)
 {
     int res;
 
     /* Halting the Watchdog  */
     MAP_WDT_A_holdTimer();
-
+    // set clock to 48Mhz external
     clockStartUp();
-
+    // initiate eusci_a0 to 9600
     UART_init();
-
+    // setup the rtc
     RTC_Config();
-
     RTC_Initial_Set();
-
+    // initialize the environment sensor
     BME280_Init(&dev);
 
     /* Enabling the FPU for floating point operation */
     MAP_FPU_enableModule();
     MAP_FPU_enableLazyStacking();
 
-    MAP_Interrupt_enableInterrupt(INT_RTC_C);
+    // fatfs driver wants 10 ms tick (100hz).
+    MAP_SysTick_setPeriod(480000);
+    MAP_SysTick_enableModule();
 
+    // initialize the fatfs driver
+
+
+
+    MAP_SysTick_enableInterrupt();
+    MAP_Interrupt_enableInterrupt(INT_RTC_C);
     MAP_Interrupt_enableMaster();
 
     char data[5];
@@ -104,4 +113,10 @@ void RTC_C_IRQHandler(void)
         /* Interrupts every minute - Set breakpoint here */
         reset_time = 1;
     }
+}
+
+
+void SysTick_ISR(void) {
+    // this function should be called every 10ms (100Hz)
+    disk_timerproc();
 }
