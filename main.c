@@ -16,6 +16,8 @@
 #include "environment_sensor.h"
 
 #include "RTC_Module.h"
+
+//UART setup up for 9600 BAUD if MCLK is 48MHz
 #include "UART_Init.h"
 
 
@@ -54,16 +56,19 @@ int main(void)
     char data[5];
 
     printf("\nTime Set\n\r");
-    char out[20];
-    RTC_C_Calendar time = MAP_RTC_C_getCalendarTime();
-    sprintf(out,"%02.0d:%02.0d:%02.0d    %02.0d/%02.0d/%02.0d",
-                time.hours,
-                time.minutes,
-                time.seconds,
-                time.month,
-                time.dayOfmonth,
-                time.year);
-    printf("Current Time: %s\n\r",out);
+//    char out[20];
+//    RTC_C_Calendar time = MAP_RTC_C_getCalendarTime();
+//    sprintf(out,"%02.0d:%02.0d:%02.0d    %02.0d/%02.0d/%02.0d",
+//                time.hours,
+//                time.minutes,
+//                time.seconds,
+//                time.month,
+//                time.dayOfmonth,
+//                time.year);
+//    printf("Current Time: %s\n\r",out);
+    getRTCtime(data);
+    printf("\n\rTime: %s",data);
+
     while(1)
     {
         // wait for the sensor to complete a measurement
