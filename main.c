@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "adc_driver.h"
 #include "clockConfig.h"
 #include "environment_sensor.h"     // eusci_b1
 #include "RTC_Module.h"
@@ -23,6 +24,7 @@
 
 volatile int second_count;
 volatile int reset_time = 0;
+volatile int light_level = 8192;
 
 
 int main(void)
@@ -54,6 +56,9 @@ int main(void)
     // initiate eusci_a0 to 9600
     UART_init();
 
+    // initiate the adc module
+    adc_Init();
+
     // setup the rtc
     RTC_Config();
     RTC_Initial_Set_Hardcoded();
@@ -84,11 +89,12 @@ int main(void)
 
             current_time = MAP_RTC_C_getCalendarTime();
             res = BME280_Read(&dev, &compensated_data);
+            light_level = adc_Read();
 
             sprintf(data_line, "%04d,%02d,%02d,%02d,%02d,%05d,%05d,%08d,%05d\r\n",
                 current_time.year, current_time.month, current_time.dayOfmonth,
                 current_time.hours, current_time.minutes, compensated_data.temperature,
-                compensated_data.humidity, compensated_data.pressure, 16383);
+                compensated_data.humidity, compensated_data.pressure, light_level);
             res = sd_Append(data_line, &g_sFatFs, &g_sFileObject);
             printf(data_line);
 
