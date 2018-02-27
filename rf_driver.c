@@ -12,7 +12,7 @@ void rf_Init(void)
 {
 
     // declare address of other transceiver
-    uint8_t addr[5] = { 0xDE, 0xAD, 0xBE, 0xEF, 0x00 };
+    uint8_t addr[5] = { 0xEE, 0xAD, 0xBE, 0xEF, 0x00 };
 
     // setup port interrupt
     MAP_GPIO_setAsInputPinWithPullUpResistor(GPIO_PORT_P5, GPIO_PIN0);
@@ -26,7 +26,8 @@ void rf_Init(void)
     rf_crc = RF24_EN_CRC | RF24_CRCO; // CRC enabled, 16-bit
     rf_addr_width      = 5;
     rf_speed_power     = RF24_SPEED_1MBPS | RF24_POWER_0DBM;
-    rf_channel         = 120;
+    rf_channel         = 105;
+
 
     msprf24_init();  // All RX pipes closed by default
     msprf24_set_pipe_packetsize(0, 32);
@@ -41,10 +42,6 @@ void rf_Init(void)
 
 void rf_Send(uint8_t len, uint8_t *buf)
 {
-//    uint8_t payload[16];
-
     w_tx_payload(len, buf);
     msprf24_activate_tx();
-//    r_rx_payload(32, payload);
-
 }

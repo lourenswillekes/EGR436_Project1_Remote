@@ -16,11 +16,14 @@
 #include "adc_driver.h"
 #include "clockConfig.h"
 #include "environment_sensor.h"     // eusci_b1
-#include "rf_driver.h"                // eusci_b2
+#include "rf_driver.h"              // eusci_b2
 #include "RTC_Module.h"
 #include "sd_driver.h"
 #include "spiDriver.h"              // eusci_b0
 #include "UART_Init.h"              // eusci_a0
+
+
+int get_LightEnumFromADC(int val);
 
 
 volatile int second_count;
@@ -31,16 +34,14 @@ int main(void)
 {
     int res;
 
-    // data used by the photocell
-    int light_level = 8192;
-
     // data used by the environmental sensor
     struct bme280_dev dev;
     struct bme280_data compensated_data;
+    int light_level;
     float normal_humidity = 0;
     float normal_pressure = 0;
     float normal_temperature = 0;
-    int normal_light = 3;
+    int   normal_light = 3;
 
     // data used to write to the sd card
     RTC_C_Calendar current_time;
@@ -114,7 +115,7 @@ int main(void)
             normal_humidity = compensated_data.humidity / 1000;
             normal_pressure = compensated_data.pressure / 13332.237;
             normal_temperature = compensated_data.temperature * 0.018 + 32;
-            //normal_light = ;
+            normal_light = get_LightEnumFromADC(light_level);
 
             // format data for packet sending and sd write
             sprintf(rf_data, "%2.1f,%3.1f,%2.1f,%1d", normal_humidity,
@@ -170,4 +171,27 @@ void PORT5_ISR(void)
     {
 //        rf_irq |= RF24_IRQ_FLAGGED;
     }
+}
+
+
+int get_LightEnumFromADC(int val)
+{
+    int ret = 0;
+
+    if (12000 < val)
+    {
+        ret = 4;
+    } else if (10000 < val)
+    {
+        ret = 3;
+    } else if (8000 < val)
+    {
+        ret = 2;
+    } else if (6000 < val)
+    {
+        ret = 1;
+    } // else it will still be 0
+
+    return ret;
+
 }
