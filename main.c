@@ -16,6 +16,7 @@
 #include "adc_driver.h"
 #include "clockConfig.h"
 #include "environment_sensor.h"     // eusci_b1
+#include "rf_driver.h"                // eusci_b2
 #include "RTC_Module.h"
 #include "sd_driver.h"
 #include "spiDriver.h"              // eusci_b0
@@ -24,24 +25,35 @@
 
 volatile int second_count;
 volatile int reset_time = 0;
-volatile int light_level = 8192;
 
 
 int main(void)
 {
     int res;
 
+    // data used by the photocell
+    int light_level = 8192;
+
     // data used by the environmental sensor
     struct bme280_dev dev;
     struct bme280_data compensated_data;
+    float normal_humidity = 0;
+    float normal_pressure = 0;
+    float normal_temperature = 0;
+    int normal_light = 3;
 
     // data used to write to the sd card
     RTC_C_Calendar current_time;
-    char data_line[45];
+    char sd_data[35];
 
     // data used by the fatfs
     FATFS g_sFatFs;
     FIL g_sFileObject;
+
+    // data used by the rf
+    char rf_data[32];
+
+
 
     /* Halting the Watchdog  */
     MAP_WDT_A_holdTimer();
@@ -74,29 +86,48 @@ int main(void)
     spi_Open();
     res = sd_Init(&g_sFatFs, &g_sFileObject);
 
+    // initiate rf transceiver
+    rf_Init();
+    MAP_GPIO_setAsOutputPin(GPIO_PORT_P1, GPIO_PIN0); // Red
+    MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN0); // Red
+
     // enable interrupts
     MAP_SysTick_enableInterrupt();
     MAP_Interrupt_enableInterrupt(INT_RTC_C);
     MAP_Interrupt_enableMaster();
 
 
+
     while(1)
     {
 
-        if(second_count >= 5){
+        if(second_count >= 3){
 
             second_count = 0;
 
+            // read the rtc and sensors
             current_time = MAP_RTC_C_getCalendarTime();
             res = BME280_Read(&dev, &compensated_data);
             light_level = adc_Read();
 
-            sprintf(data_line, "%04d,%02d,%02d,%02d,%02d,%05d,%05d,%08d,%05d\r\n",
+            // format the sensor data properly
+            normal_humidity = compensated_data.humidity / 1000;
+            normal_pressure = compensated_data.pressure / 13332.237;
+            normal_temperature = compensated_data.temperature * 0.018 + 32;
+            //normal_light = ;
+
+            // format data for packet sending and sd write
+            sprintf(rf_data, "%2.1f,%3.1f,%2.1f,%1d", normal_humidity,
+                normal_pressure, normal_temperature, normal_light);
+            sprintf(sd_data, "%04d,%02d,%02d,%02d,%02d,%s\n",
                 current_time.year, current_time.month, current_time.dayOfmonth,
-                current_time.hours, current_time.minutes, compensated_data.temperature,
-                compensated_data.humidity, compensated_data.pressure, light_level);
-            res = sd_Append(data_line, &g_sFatFs, &g_sFileObject);
-            printf(data_line);
+                current_time.hours, current_time.minutes, rf_data);
+
+            // send and write the data
+            rf_Send(32, (uint8_t *)rf_data);
+            res = sd_Append(sd_data, &g_sFatFs, &g_sFileObject);
+
+            printf(sd_data); printf("\r");
 
         }
 
@@ -104,7 +135,7 @@ int main(void)
 }
 
 
-/* RTC ISR */
+
 void RTC_C_IRQHandler(void)
 {
     uint32_t status;
@@ -123,8 +154,20 @@ void RTC_C_IRQHandler(void)
     }
 }
 
-
 void SysTick_ISR(void) {
     // this function should be called every 10ms (100Hz) for the fatfs
     disk_timerproc();
+}
+
+void PORT5_ISR(void)
+{
+    uint32_t status;
+
+    status = MAP_GPIO_getEnabledInterruptStatus(GPIO_PORT_P5);
+    P5IFG = 0;  // clear port interrupt status??
+
+    if (status & BIT0)
+    {
+//        rf_irq |= RF24_IRQ_FLAGGED;
+    }
 }

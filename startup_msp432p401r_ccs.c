@@ -57,6 +57,7 @@ extern unsigned long __STACK_END;
 /* External declarations for the interrupt handlers used by the application. */
 extern void RTC_C_IRQHandler(void);
 extern void SysTick_ISR(void);
+extern void PORT5_ISR(void);
 
 
 /* Interrupt vector table.  Note that the proper constructs must be placed on this to  */
@@ -122,7 +123,7 @@ void (* const interruptVectors[])(void) =
     defaultISR,                             /* PORT2 ISR                 */
     defaultISR,                             /* PORT3 ISR                 */
     defaultISR,                             /* PORT4 ISR                 */
-    defaultISR,                             /* PORT5 ISR                 */
+    PORT5_ISR,                             /* PORT5 ISR                 */
     defaultISR,                             /* PORT6 ISR                 */
     defaultISR,                             /* Reserved 41               */
     defaultISR,                             /* Reserved 42               */

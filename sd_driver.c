@@ -7,7 +7,7 @@
 
 #include "sd_driver.h"
 
-#define LOGGER_LINE_SIZE    45
+#define LOGGER_LINE_SIZE    35
 static const char *LOGGER_FILE_NAME = "log.txt";
 
 
@@ -15,7 +15,7 @@ int sd_Init(FATFS *fs, FIL *fo)
 {
     FRESULT res;
     UINT write_bytes;
-    char *LOGGER_HEADER = "Year Mo Da Ho Mi Tempe Humid Pressure Light\r\n";
+    char *LOGGER_HEADER = "Year Mo Da Ho Mi Temp Humi Press L\n";
 
     // mount the file system using logical disk 0
     res = f_mount(0, fs);
