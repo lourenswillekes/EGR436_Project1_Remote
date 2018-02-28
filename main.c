@@ -55,7 +55,6 @@ int main(void)
     char rf_data[32];
 
 
-
     /* Halting the Watchdog  */
     MAP_WDT_A_holdTimer();
 
@@ -65,6 +64,10 @@ int main(void)
     /* Enabling the FPU for floating point operation */
     MAP_FPU_enableModule();
     MAP_FPU_enableLazyStacking();
+
+    // red led initialization
+    MAP_GPIO_setAsOutputPin(GPIO_PORT_P1, GPIO_PIN0);
+    MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN0);
 
     // initiate eusci_a0 to 9600
     UART_init();
@@ -89,8 +92,6 @@ int main(void)
 
     // initiate rf transceiver
     rf_Init();
-    MAP_GPIO_setAsOutputPin(GPIO_PORT_P1, GPIO_PIN0); // Red
-    MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN0); // Red
 
     // enable interrupts
     MAP_SysTick_enableInterrupt();
@@ -102,9 +103,12 @@ int main(void)
     while(1)
     {
 
-        if(second_count >= 3){
+        if(second_count >= 15){
 
             second_count = 0;
+
+            // red led on
+            MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P1, GPIO_PIN0);
 
             // read the rtc and sensors
             current_time = MAP_RTC_C_getCalendarTime();
@@ -125,10 +129,13 @@ int main(void)
                 current_time.hours, current_time.minutes, rf_data);
 
             // send and write the data
-            rf_Send(32, (uint8_t *)rf_data);
+            res = rf_Send(32, (uint8_t *)rf_data);
             res = sd_Append(sd_data, &g_sFatFs, &g_sFileObject);
 
             printf(sd_data); printf("\r");
+
+            // red led off
+            MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN0);
 
         }
 
@@ -169,7 +176,7 @@ void PORT5_ISR(void)
 
     if (status & BIT0)
     {
-//        rf_irq |= RF24_IRQ_FLAGGED;
+        rf_irq |= RF24_IRQ_FLAGGED;
     }
 }
 
@@ -178,16 +185,16 @@ int get_LightEnumFromADC(int val)
 {
     int ret = 0;
 
-    if (12000 < val)
+    if (13000 < val)
     {
         ret = 4;
-    } else if (10000 < val)
+    } else if (11000 < val)
     {
         ret = 3;
     } else if (8000 < val)
     {
         ret = 2;
-    } else if (6000 < val)
+    } else if (4000 < val)
     {
         ret = 1;
     } // else it will still be 0

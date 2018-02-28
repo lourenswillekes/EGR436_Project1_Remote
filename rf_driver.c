@@ -14,6 +14,10 @@ void rf_Init(void)
     // declare address of other transceiver
     uint8_t addr[5] = { 0xEE, 0xAD, 0xBE, 0xEF, 0x00 };
 
+    // green led initialization
+    MAP_GPIO_setAsOutputPin(GPIO_PORT_P2, GPIO_PIN1);
+    MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN1);
+
     // setup port interrupt
     MAP_GPIO_setAsInputPinWithPullUpResistor(GPIO_PORT_P5, GPIO_PIN0);
     MAP_GPIO_interruptEdgeSelect(GPIO_PORT_P5, GPIO_PIN0,
@@ -40,8 +44,30 @@ void rf_Init(void)
 
 }
 
-void rf_Send(uint8_t len, uint8_t *buf)
+int rf_Send(uint8_t len, uint8_t *buf)
 {
+    int ret = 0;
+
     w_tx_payload(len, buf);
     msprf24_activate_tx();
+
+    __delay_cycles(150000);
+
+    if (rf_irq & RF24_IRQ_FLAGGED) {
+        rf_irq &= ~RF24_IRQ_FLAGGED;
+
+        msprf24_get_irq_reason();
+        if (rf_irq & RF24_IRQ_TX){
+            MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P2, GPIO_PIN1);
+            ret = 1;
+        }
+        if (rf_irq & RF24_IRQ_TXFAILED){
+            MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN1);
+        }
+
+        msprf24_irq_clear(rf_irq);
+    }
+
+    return ret;
+
 }
