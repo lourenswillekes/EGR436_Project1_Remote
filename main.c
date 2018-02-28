@@ -13,21 +13,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "adc_driver.h"
+#include "ADC_driver.h"
+#include "BME280_driver.h"          // eusci_b1
 #include "clockConfig.h"
-#include "environment_sensor.h"     // eusci_b1
 #include "rf_driver.h"              // eusci_b2
-#include "RTC_Module.h"
+#include "RTC_driver.h"
 #include "sd_driver.h"
 #include "spiDriver.h"              // eusci_b0
 #include "UART_Init.h"              // eusci_a0
 
 
-int get_LightEnumFromADC(int val);
+int getLightEnumFromADC(int val);
 
 
 volatile int second_count;
-volatile int reset_time = 0;
 
 
 int main(void)
@@ -41,7 +40,7 @@ int main(void)
     float normal_humidity = 0;
     float normal_pressure = 0;
     float normal_temperature = 0;
-    int   normal_light = 3;
+    int normal_light = 3;
 
     // data used to write to the sd card
     RTC_C_Calendar current_time;
@@ -73,14 +72,14 @@ int main(void)
     UART_init();
 
     // initiate the adc module
-    adc_Init();
+    ADC_init();
 
     // setup the rtc
-    RTC_Config();
-    RTC_Initial_Set_Hardcoded();
+    RTC_init();
+    RTC_initialSetHardcoded();
 
     // initialize the environment sensor
-    BME280_Init(&dev);
+    BME280_init(&dev);
 
     // fatfs driver wants 10 ms tick (100hz)
     MAP_SysTick_setPeriod(30000);
@@ -111,15 +110,15 @@ int main(void)
             MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P1, GPIO_PIN0);
 
             // read the rtc and sensors
-            current_time = MAP_RTC_C_getCalendarTime();
-            res = BME280_Read(&dev, &compensated_data);
-            light_level = adc_Read();
+            current_time = RTC_read();
+            res = BME280_read(&dev, &compensated_data);
+            light_level = ADC_read();
 
             // format the sensor data properly
             normal_humidity = compensated_data.humidity / 1000;
             normal_pressure = compensated_data.pressure / 13332.237;
             normal_temperature = compensated_data.temperature * 0.018 + 32;
-            normal_light = get_LightEnumFromADC(light_level);
+            normal_light = getLightEnumFromADC(light_level);
 
             // format data for packet sending and sd write
             sprintf(rf_data, "%2.1f,%3.1f,%2.1f,%1d", normal_humidity,
@@ -155,11 +154,7 @@ void RTC_C_IRQHandler(void)
     {
         second_count++;
     }
-    if (status & RTC_C_TIME_EVENT_INTERRUPT)
-    {
-        /* Interrupts every minute - Set breakpoint here */
-        reset_time = 1;
-    }
+
 }
 
 void SysTick_ISR(void) {
@@ -181,7 +176,7 @@ void PORT5_ISR(void)
 }
 
 
-int get_LightEnumFromADC(int val)
+int getLightEnumFromADC(int val)
 {
     int ret = 0;
 

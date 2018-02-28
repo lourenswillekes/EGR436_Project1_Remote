@@ -1,14 +1,14 @@
 /*
- * adc.c
+ * ADC_driver.c
  *
  *  Created on: Feb 2018
  *      Author: lourw and joe
  */
 
-#include "adc_driver.h"
+#include "ADC_driver.h"
 
 
-void adc_Init(void)
+void ADC_init(void)
 {
     // initializing adc clk = 3MHz
     MAP_ADC14_enableModule();
@@ -31,7 +31,7 @@ void adc_Init(void)
 
 }
 
-uint16_t adc_Read(void)
+uint16_t ADC_read(void)
 {
     uint16_t res;
 

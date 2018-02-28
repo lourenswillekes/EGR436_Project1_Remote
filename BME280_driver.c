@@ -1,23 +1,20 @@
 /*
- * environment_sensor.c
+ * BME280_driver.c
  *
  *  Created on: Feb 2018
  *      Author: lourw and joe
  */
 
-#include "environment_sensor.h"
+#include "BME280_driver.h"
 
 
 // configures i2c and initializes bme280 in Normal Mode
-int8_t BME280_Init(struct bme280_dev *dev) {
+int8_t BME280_init(struct bme280_dev *dev) {
 
     int8_t res;
     int settings_select;
 
     I2C_Init();
-    /* TODO: for some reason when I put thisiInit function above the i2c_init
-     * function the i2c module wouldn't initialize properly?
-     */
     timer32_Init();
 
     // configure I2C
@@ -50,7 +47,7 @@ int8_t BME280_Init(struct bme280_dev *dev) {
 }
 
 // fills data structure with compensated data from sensor
-int8_t BME280_Read(struct bme280_dev *dev, struct bme280_data *data) {
+int8_t BME280_read(struct bme280_dev *dev, struct bme280_data *data) {
 
     int8_t res;
 

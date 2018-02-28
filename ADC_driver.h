@@ -1,5 +1,5 @@
 /*
- * adc.h
+ * ADC_driver.h
  *
  *  Created on: Feb 2018
  *      Author: lourw and joe
@@ -11,8 +11,8 @@
 #include "driverlib.h"
 
 
-void adc_Init(void);
-uint16_t adc_Read(void);
+void ADC_init(void);
+uint16_t ADC_read(void);
 
 
 #endif /* ADC_DRIVER_H_ */
