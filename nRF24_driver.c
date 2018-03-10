@@ -1,14 +1,14 @@
 /*
- * rf_driver.c
+ * nRF24_driver.c
  *
  *  Created on: Feb 26, 2018
  *      Author: lourw
  */
 
-#include "rf_driver.h"
+#include "nRF24_driver.h"
 
 
-void rf_Init(void)
+void nRF24_init(void)
 {
 
     // declare address of other transceiver
@@ -44,10 +44,8 @@ void rf_Init(void)
 
 }
 
-int rf_Send(uint8_t len, uint8_t *buf)
+void nRF24_send(uint8_t len, uint8_t *buf)
 {
-    int ret = 0;
-
     w_tx_payload(len, buf);
     msprf24_activate_tx();
 
@@ -59,7 +57,6 @@ int rf_Send(uint8_t len, uint8_t *buf)
         msprf24_get_irq_reason();
         if (rf_irq & RF24_IRQ_TX){
             MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P2, GPIO_PIN1);
-            ret = 1;
         }
         if (rf_irq & RF24_IRQ_TXFAILED){
             MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN1);
@@ -67,7 +64,5 @@ int rf_Send(uint8_t len, uint8_t *buf)
 
         msprf24_irq_clear(rf_irq);
     }
-
-    return ret;
 
 }

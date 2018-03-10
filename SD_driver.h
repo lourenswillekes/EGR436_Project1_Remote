@@ -1,5 +1,5 @@
 /*
- * sd_driver.h
+ * SD_driver.h
  *
  *  Created on: Feb 2018
  *      Author: lourw
@@ -12,10 +12,11 @@
 #include "driverlib.h"
 #include "fatfs/src/diskio.h"
 #include "fatfs/src/ff.h"
+#include "spiDriver.h"
 
 
-int sd_Init(FATFS *fs, FIL *fo);
-int sd_Append(char *line, FATFS *fs, FIL *fo);
+void SD_init(FATFS *fs, FIL *fo);
+void SD_append(char *line, FATFS *fs, FIL *fo);
 
 
 #endif /* SD_DRIVER_H_ */

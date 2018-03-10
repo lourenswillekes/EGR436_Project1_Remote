@@ -9,12 +9,13 @@
 
 RTC_C_Calendar currentTime =
 {
-     1,
-     3,
-     10,
-     12,
-     11,
+ // sec, min, hour, day of week, day of month, month, year
      00,
+     50,
+     20,
+     05,
+     02,
+     03,
      2018
 };
 

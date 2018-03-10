@@ -16,16 +16,15 @@
 #include "ADC_driver.h"
 #include "BME280_driver.h"          // eusci_b1
 #include "clockConfig.h"
-#include "rf_driver.h"              // eusci_b2
+#include "nRF24_driver.h"           // eusci_b2
 #include "RTC_driver.h"
-#include "sd_driver.h"
-#include "spiDriver.h"              // eusci_b0
+#include "SD_driver.h"              // eusci_b0
 #include "UART_Init.h"              // eusci_a0
 
-
+// this function associates a light level with the adc value
 int getLightEnumFromADC(int val);
 
-
+// updated by the rtc
 volatile int second_count;
 
 
@@ -36,15 +35,17 @@ int main(void)
     // data used by the environmental sensor
     struct bme280_dev dev;
     struct bme280_data compensated_data;
-    int light_level;
     float normal_humidity = 0;
     float normal_pressure = 0;
     float normal_temperature = 0;
+
+    // data used by the photocell
+    int light_level;
     int normal_light = 3;
 
     // data used to write to the sd card
     RTC_C_Calendar current_time;
-    char sd_data[35];
+    char sd_data[40];
 
     // data used by the fatfs
     FATFS g_sFatFs;
@@ -52,6 +53,7 @@ int main(void)
 
     // data used by the rf
     char rf_data[32];
+
 
 
     /* Halting the Watchdog  */
@@ -85,12 +87,11 @@ int main(void)
     MAP_SysTick_setPeriod(30000);
     MAP_SysTick_enableModule();
 
-    // open spi to the sd and initialize the fatfs driver
-    spi_Open();
-    res = sd_Init(&g_sFatFs, &g_sFileObject);
+    // initialize the fatfs driver
+    SD_init(&g_sFatFs, &g_sFileObject);
 
     // initiate rf transceiver
-    rf_Init();
+    nRF24_init();
 
     // enable interrupts
     MAP_SysTick_enableInterrupt();
@@ -121,15 +122,15 @@ int main(void)
             normal_light = getLightEnumFromADC(light_level);
 
             // format data for packet sending and sd write
-            sprintf(rf_data, "%2.1f,%3.1f,%2.1f,%1d", normal_humidity,
+            sprintf(rf_data, "%2.1f,%3.1f,%2.1f,%05d", normal_humidity,
                 normal_pressure, normal_temperature, normal_light);
             sprintf(sd_data, "%04d,%02d,%02d,%02d,%02d,%s\n",
                 current_time.year, current_time.month, current_time.dayOfmonth,
                 current_time.hours, current_time.minutes, rf_data);
 
             // send and write the data
-            res = rf_Send(32, (uint8_t *)rf_data);
-            res = sd_Append(sd_data, &g_sFatFs, &g_sFileObject);
+            nRF24_send(32, (uint8_t *)rf_data);
+            SD_append(sd_data, &g_sFatFs, &g_sFileObject);
 
             printf(sd_data); printf("\r");
 
