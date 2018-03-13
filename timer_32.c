@@ -18,11 +18,13 @@ void timer32_Init(void) {
 
 void timer32_Wait_ms(uint32_t ms) {
 
+    // 187.5 clock cycles per ms
     int count = ms * 187.5;
 
+    // set the count and start the timer
     MAP_Timer32_setCount(TIMER32_0_BASE, count);
     MAP_Timer32_startTimer(TIMER32_0_BASE, true);
 
-    // Go to sleep
+    // wait until counter hits 0
     while (0 < MAP_Timer32_getValue(TIMER32_0_BASE));
 }

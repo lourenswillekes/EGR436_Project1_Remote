@@ -21,6 +21,7 @@
 #include "SD_driver.h"              // eusci_b0
 #include "UART_Init.h"              // eusci_a0
 
+
 // this function associates a light level with the adc value
 int getLightEnumFromADC(int val);
 
@@ -105,6 +106,7 @@ int main(void)
 
         if(second_count >= 15){
 
+            // reset second_count
             second_count = 0;
 
             // red led on
@@ -117,21 +119,24 @@ int main(void)
 
             // format the sensor data properly
             normal_humidity = compensated_data.humidity / 1000;
-            normal_pressure = compensated_data.pressure / 13332.237;
+            normal_pressure = (compensated_data.pressure / 13332.237) + 17;
             normal_temperature = compensated_data.temperature * 0.018 + 32;
             normal_light = getLightEnumFromADC(light_level);
 
             // format data for packet sending and sd write
             sprintf(rf_data, "%2.1f,%3.1f,%2.1f,%05d", normal_humidity,
                 normal_pressure, normal_temperature, normal_light);
-            sprintf(sd_data, "%04d,%02d,%02d,%02d,%02d,%s\n",
+            sprintf(sd_data, "%04d,%02d,%02d,%02d,%02d,%2.1f,%3.1f,%2.1f,%05d\n",
                 current_time.year, current_time.month, current_time.dayOfmonth,
-                current_time.hours, current_time.minutes, rf_data);
+                current_time.hours, current_time.minutes, normal_humidity,
+                normal_pressure, normal_temperature, light_level);
 
             // send and write the data
             nRF24_send(32, (uint8_t *)rf_data);
             SD_append(sd_data, &g_sFatFs, &g_sFileObject);
 
+            // debugging statements
+            printf(rf_data); printf("\n\r");
             printf(sd_data); printf("\r");
 
             // red led off
@@ -148,9 +153,11 @@ void RTC_C_IRQHandler(void)
 {
     uint32_t status;
 
+    // get status and clear interrupt flag
     status = MAP_RTC_C_getEnabledInterruptStatus();
     MAP_RTC_C_clearInterruptFlag(status);
 
+    // increment counter to keep time
     if (status & RTC_C_CLOCK_READ_READY_INTERRUPT)
     {
         second_count++;
@@ -167,9 +174,11 @@ void PORT5_ISR(void)
 {
     uint32_t status;
 
+    // get status and clear interrupt flag
     status = MAP_GPIO_getEnabledInterruptStatus(GPIO_PORT_P5);
-    P5IFG = 0;  // clear port interrupt status??
+    P5IFG = 0;
 
+    // set rf_irq with interrupt value
     if (status & BIT0)
     {
         rf_irq |= RF24_IRQ_FLAGGED;
@@ -183,17 +192,17 @@ int getLightEnumFromADC(int val)
 
     if (13000 < val)
     {
-        ret = 4;
+        ret = 4;            // sunny
     } else if (11000 < val)
     {
-        ret = 3;
+        ret = 3;            // partly sunny
     } else if (8000 < val)
     {
-        ret = 2;
+        ret = 2;            // overcast
     } else if (4000 < val)
     {
-        ret = 1;
-    } // else it will still be 0
+        ret = 1;            // twilight
+    } // else it will still be 0 (dark)
 
     return ret;
 

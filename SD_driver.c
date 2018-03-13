@@ -7,14 +7,14 @@
 
 #include "SD_driver.h"
 
-#define LOGGER_LINE_SIZE    40
+#define LOGGER_LINE_SIZE    39
 static const char *LOGGER_FILE_NAME = "log.txt";
 
 
 void SD_init(FATFS *fs, FIL *fo)
 {
     UINT write_bytes;
-    char *LOGGER_HEADER = "Year Mo Da Ho Mi Humi Press Temp Light\n";
+    char *LOGGER_HEADER = "Year,Mo,Da,Ho,Mi,Humi,Press,Temp,Light\n";
 
     // open spi to the sd card
     spi_Open();
